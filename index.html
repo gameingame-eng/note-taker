@@ -1,1 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Minimal Notes</title>
+    <style>
+      :root {
+        --bg: #0d0d0d;
+        --bg2: #111;
+        --bg3: #181818;
+        --text: #f5f5f5;
+        --text-muted: #9a9a9a;
+        --accent: #4f8cff;
+        --border: #1f1f1f;
+        --radius: 8px;
+        --fast: 0.18s ease;
+      }
 
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: Inter, sans-serif;
+        display: flex;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      /* SIDEBAR */
+      #sidebar {
+        width: 260px;
+        background: var(--bg2);
+        border-right: 1px solid var(--border);
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      #newNoteBtn {
+        background: var(--bg3);
+        border: none;
+        padding: 10px;
+        border-radius: var(--radius);
+        color: var(--text);
+        cursor: pointer;
+        transition: var(--fast);
+        margin-bottom: 16px;
+      }
+      #newNoteBtn:hover {
+        background: #222;
+      }
+
+      .note-item {
+        background: var(--bg3);
+        padding: 10px;
+        border-radius: var(--radius);
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: var(--fast);
+        position: relative;
+      }
+      .note-item:hover {
+        background: #222;
+      }
+
+      .note-item.active {
+        border: 1px solid var(--accent);
+        background: rgba(79, 140, 255, 0.1);
+      }
+
+      .delete-btn {
+        position: absolute;
+        right: 8px;
+        top: 8px;
+        font-size: 14px;
+        color: #888;
+        cursor: pointer;
+        transition: var(--fast);
+      }
+      .delete-btn:hover {
+        color: #ff4f4f;
+      }
+
+      /* EDITOR */
+      #editor {
+        flex: 1;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      #titleInput {
+        background: transparent;
+        border: none;
+        outline: none;
+        font-size: 26px;
+        font-weight: 600;
+        margin-bottom: 12px;
+        color: var(--text);
+      }
+
+      /* TOOLBAR */
+      #toolbar {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .tool-btn {
+        background: var(--bg3);
+        border: 1px solid var(--border);
+        padding: 6px 10px;
+        border-radius: var(--radius);
+        cursor: pointer;
+        color: var(--text-muted);
+        font-size: 13px;
+        transition: var(--fast);
+      }
+      .tool-btn:hover {
+        background: #222;
+        color: var(--text);
+      }
+
+      #contentInput {
+        flex: 1;
+        background: transparent;
+        border: none;
+        outline: none;
+        resize: none;
+        color: var(--text);
+        font-size: 16px;
+        line-height: 1.6;
+        padding-right: 10px;
+      }
+
+      /* CHECKLIST STYLE */
+      .checklist-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+      }
+
+      .checklist-item input {
+        width: 16px;
+        height: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="sidebar">
+      <button id="newNoteBtn">+ New Note</button>
+      <div id="notesList"></div>
+    </div>
+
+    <div id="editor">
+      <input id="titleInput" placeholder="Title..." />
+
+      <div id="toolbar">
+        <button class="tool-btn" data-action="h1">H1</button>
+        <button class="tool-btn" data-action="h2">H2</button>
+        <button class="tool-btn" data-action="h3">H3</button>
+        <button class="tool-btn" data-action="check">Checklist</button>
+      </div>
+
+      <textarea id="contentInput" placeholder="Start typing..."></textarea>
+    </div>
+
+    <script>
+      /* -------------------------
+   DATA + STORAGE
+--------------------------*/
+      let notes = JSON.parse(localStorage.getItem('notes_v2') || '[]');
+      let current = 0;
+
+      function save() {
+        localStorage.setItem('notes_v2', JSON.stringify(notes));
+      }
+
+      /* -------------------------
+   RENDER NOTES LIST
+--------------------------*/
+      const notesList = document.getElementById('notesList');
+
+      function renderNotes() {
+        notesList.innerHTML = '';
+        notes.forEach((note, i) => {
+          const div = document.createElement('div');
+          div.className = 'note-item' + (i === current ? ' active' : '');
+          div.innerHTML = `
+            <strong>${note.title || 'Untitled'}</strong><br>
+            <small>${note.content.slice(0, 40)}</small>
+            <div class="delete-btn" data-del="${i}">🗑</div>
+        `;
+          div.onclick = () => {
+            current = i;
+            loadNote();
+            renderNotes();
+          };
+          notesList.appendChild(div);
+        });
+      }
+
+      /* -------------------------
+   LOAD NOTE INTO EDITOR
+--------------------------*/
+      const titleInput = document.getElementById('titleInput');
+      const contentInput = document.getElementById('contentInput');
+
+      function loadNote() {
+        if (!notes[current]) return;
+        titleInput.value = notes[current].title;
+        contentInput.value = notes[current].content;
+      }
+
+      /* -------------------------
+   CREATE NEW NOTE
+--------------------------*/
+      document.getElementById('newNoteBtn').onclick = () => {
+        notes.unshift({ title: 'Untitled', content: '' });
+        current = 0;
+        save();
+        renderNotes();
+        loadNote();
+      };
+
+      /* -------------------------
+   DELETE NOTE
+--------------------------*/
+      notesList.onclick = (e) => {
+        if (e.target.dataset.del !== undefined) {
+          const index = Number(e.target.dataset.del);
+          notes.splice(index, 1);
+          if (current >= notes.length) current = notes.length - 1;
+          save();
+          renderNotes();
+          loadNote();
+          e.stopPropagation();
+        }
+      };
+
+      /* -------------------------
+   LIVE UPDATES
+--------------------------*/
+      titleInput.oninput = () => {
+        notes[current].title = titleInput.value;
+        save();
+        renderNotes();
+      };
+
+      contentInput.oninput = () => {
+        notes[current].content = contentInput.value;
+        save();
+        renderNotes();
+      };
+
+      /* -------------------------
+   TOOLBAR ACTIONS
+--------------------------*/
+      document.getElementById('toolbar').onclick = (e) => {
+        if (!e.target.dataset.action) return;
+
+        const action = e.target.dataset.action;
+        const start = contentInput.selectionStart;
+        const end = contentInput.selectionEnd;
+        const text = contentInput.value;
+
+        let before = text.slice(0, start);
+        let selected = text.slice(start, end);
+        let after = text.slice(end);
+
+        if (action === 'h1') selected = '# ' + selected;
+        if (action === 'h2') selected = '## ' + selected;
+        if (action === 'h3') selected = '### ' + selected;
+        if (action === 'check') selected = '- [ ] ' + selected;
+
+        contentInput.value = before + selected + after;
+        contentInput.focus();
+        contentInput.selectionStart = start + selected.length;
+        contentInput.selectionEnd = start + selected.length;
+
+        notes[current].content = contentInput.value;
+        save();
+        renderNotes();
+      };
+
+      /* -------------------------
+   INIT
+--------------------------*/
+      if (notes.length === 0) {
+        notes.push({ title: 'Welcome', content: '' });
+      }
+      renderNotes();
+      loadNote();
+    </script>
+  </body>
+</html>
