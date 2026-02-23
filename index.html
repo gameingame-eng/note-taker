@@ -59,7 +59,7 @@
         padding: 10px;
         border-radius: var(--radius);
         margin-bottom: 10px;
-        cursor: pointer;
+        cursor: grab;
         transition: var(--fast);
         position: relative;
       }
@@ -70,6 +70,10 @@
       .note-item.active {
         border: 1px solid var(--accent);
         background: rgba(79, 140, 255, 0.1);
+      }
+
+      .note-item.drag-over {
+        outline: 1px dashed var(--accent);
       }
 
       .delete-btn {
@@ -125,29 +129,46 @@
         color: var(--text);
       }
 
-      #contentInput {
+      /* CONTENTEDITABLE */
+      #contentEditable {
         flex: 1;
         background: transparent;
         border: none;
         outline: none;
-        resize: none;
         color: var(--text);
         font-size: 16px;
         line-height: 1.6;
         padding-right: 10px;
+        overflow-y: auto;
       }
 
-      /* CHECKLIST STYLE */
-      .checklist-item {
+      .fade-in {
+        animation: fadeIn 0.2s ease-out;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(4px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* CHECKLIST */
+      .check-item {
         display: flex;
         align-items: center;
         gap: 8px;
-        cursor: pointer;
+        margin: 4px 0;
       }
 
-      .checklist-item input {
+      .check-item input {
         width: 16px;
         height: 16px;
+        cursor: pointer;
       }
     </style>
   </head>
@@ -167,18 +188,28 @@
         <button class="tool-btn" data-action="check">Checklist</button>
       </div>
 
-      <textarea id="contentInput" placeholder="Start typing..."></textarea>
+      <div id="contentEditable" contenteditable="true"></div>
     </div>
 
     <script>
       /* -------------------------
    DATA + STORAGE
 --------------------------*/
-      let notes = JSON.parse(localStorage.getItem('notes_v2') || '[]');
+      let notes = JSON.parse(localStorage.getItem('notes_v8') || '[]');
       let current = 0;
 
+      function ensureNoteShape(note) {
+        if (note.manualTitle === undefined) note.manualTitle = false;
+        return note;
+      }
+
+      notes = notes.map(ensureNoteShape);
+
       function save() {
-        localStorage.setItem('notes_v2', JSON.stringify(notes));
+        notes[current].content =
+          document.getElementById('contentEditable').innerHTML;
+        notes[current].title = document.getElementById('titleInput').value;
+        localStorage.setItem('notes_v8', JSON.stringify(notes));
       }
 
       /* -------------------------
@@ -191,69 +222,84 @@
         notes.forEach((note, i) => {
           const div = document.createElement('div');
           div.className = 'note-item' + (i === current ? ' active' : '');
+          div.draggable = true;
+          div.dataset.index = i;
           div.innerHTML = `
             <strong>${note.title || 'Untitled'}</strong><br>
-            <small>${note.content.slice(0, 40)}</small>
+            <small>${note.content.replace(/<[^>]+>/g, '').slice(0, 40)}</small>
             <div class="delete-btn" data-del="${i}">🗑</div>
         `;
-          div.onclick = () => {
+          div.addEventListener('click', (ev) => {
+            if (ev.target.dataset.del !== undefined) return;
             current = i;
-            loadNote();
+            loadNote(true);
             renderNotes();
-          };
+          });
+          addDragEvents(div);
           notesList.appendChild(div);
         });
       }
 
       /* -------------------------
-   LOAD NOTE INTO EDITOR
+   LOAD NOTE INTO EDITOR (with fade)
 --------------------------*/
-      const titleInput = document.getElementById('titleInput');
-      const contentInput = document.getElementById('contentInput');
+      function loadNote(withFade = false) {
+        const note = ensureNoteShape(notes[current]);
+        const titleEl = document.getElementById('titleInput');
+        const contentEl = document.getElementById('contentEditable');
 
-      function loadNote() {
-        if (!notes[current]) return;
-        titleInput.value = notes[current].title;
-        contentInput.value = notes[current].content;
+        titleEl.value = note.title;
+        contentEl.innerHTML = note.content;
+
+        if (withFade) {
+          contentEl.classList.remove('fade-in');
+          void contentEl.offsetWidth; // force reflow
+          contentEl.classList.add('fade-in');
+        }
       }
 
       /* -------------------------
    CREATE NEW NOTE
 --------------------------*/
       document.getElementById('newNoteBtn').onclick = () => {
-        notes.unshift({ title: 'Untitled', content: '' });
+        notes.unshift({ title: 'Untitled', content: '', manualTitle: false });
         current = 0;
+
+        document.getElementById('titleInput').value = '';
+        document.getElementById('contentEditable').innerHTML = '';
+
         save();
         renderNotes();
-        loadNote();
+        loadNote(true);
       };
 
       /* -------------------------
    DELETE NOTE
 --------------------------*/
-      notesList.onclick = (e) => {
+      notesList.addEventListener('click', (e) => {
         if (e.target.dataset.del !== undefined) {
           const index = Number(e.target.dataset.del);
           notes.splice(index, 1);
-          if (current >= notes.length) current = notes.length - 1;
+          if (notes.length === 0) {
+            notes.push({ title: 'Untitled', content: '', manualTitle: false });
+            current = 0;
+          } else if (current >= notes.length) {
+            current = notes.length - 1;
+          }
           save();
           renderNotes();
-          loadNote();
+          loadNote(true);
           e.stopPropagation();
         }
-      };
+      });
 
       /* -------------------------
-   LIVE UPDATES
+   TITLE LIVE UPDATE (marks manual)
 --------------------------*/
-      titleInput.oninput = () => {
-        notes[current].title = titleInput.value;
-        save();
-        renderNotes();
-      };
-
-      contentInput.oninput = () => {
-        notes[current].content = contentInput.value;
+      document.getElementById('titleInput').oninput = () => {
+        const titleEl = document.getElementById('titleInput');
+        notes[current].title = titleEl.value;
+        notes[current].manualTitle = titleEl.value.trim().length > 0;
         save();
         renderNotes();
       };
@@ -265,37 +311,160 @@
         if (!e.target.dataset.action) return;
 
         const action = e.target.dataset.action;
-        const start = contentInput.selectionStart;
-        const end = contentInput.selectionEnd;
-        const text = contentInput.value;
+        const editor = document.getElementById('contentEditable');
 
-        let before = text.slice(0, start);
-        let selected = text.slice(start, end);
-        let after = text.slice(end);
+        if (action === 'check') {
+          const div = document.createElement('div');
+          div.className = 'check-item';
+          div.innerHTML = `<input type="checkbox"><span>New task</span>`;
+          editor.appendChild(div);
+          save();
+          renderNotes();
+          return;
+        }
 
-        if (action === 'h1') selected = '# ' + selected;
-        if (action === 'h2') selected = '## ' + selected;
-        if (action === 'h3') selected = '### ' + selected;
-        if (action === 'check') selected = '- [ ] ' + selected;
-
-        contentInput.value = before + selected + after;
-        contentInput.focus();
-        contentInput.selectionStart = start + selected.length;
-        contentInput.selectionEnd = start + selected.length;
-
-        notes[current].content = contentInput.value;
+        document.execCommand('formatBlock', false, action);
         save();
         renderNotes();
       };
 
       /* -------------------------
+   CHECKLIST ENTER BEHAVIOR
+--------------------------*/
+      document
+        .getElementById('contentEditable')
+        .addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            const sel = window.getSelection();
+            const node = sel.anchorNode;
+            const checkItem =
+              node &&
+              node.parentElement &&
+              node.parentElement.closest('.check-item');
+
+            if (checkItem) {
+              e.preventDefault();
+
+              const span = checkItem.querySelector('span');
+              if (span && span.textContent.trim() === '') {
+                const br = document.createElement('br');
+                checkItem.after(br);
+                checkItem.remove();
+
+                const range = document.createRange();
+                range.setStartAfter(br);
+                range.collapse(true);
+                sel.removeAllRanges();
+                sel.addRange(range);
+                save();
+                return;
+              }
+
+              const newItem = document.createElement('div');
+              newItem.className = 'check-item';
+              newItem.innerHTML = `<input type="checkbox"><span></span>`;
+
+              checkItem.after(newItem);
+
+              const range = document.createRange();
+              range.setStart(newItem.querySelector('span'), 0);
+              range.collapse(true);
+
+              sel.removeAllRanges();
+              sel.addRange(range);
+
+              save();
+            }
+          }
+        });
+
+      /* -------------------------
+   AUTO TITLE FROM FIRST LINE (respects manualTitle)
+--------------------------*/
+      document
+        .getElementById('contentEditable')
+        .addEventListener('input', () => {
+          const editor = document.getElementById('contentEditable');
+          const text = editor.innerText || '';
+          const lines = text
+            .split('\n')
+            .map((l) => l.trim())
+            .filter((l) => l.length > 0);
+
+          const note = ensureNoteShape(notes[current]);
+          const titleEl = document.getElementById('titleInput');
+          const currentTitle = titleEl.value.trim();
+
+          const shouldAutoTitle =
+            !note.manualTitle &&
+            (currentTitle === '' || currentTitle === 'Untitled');
+
+          if (shouldAutoTitle && lines.length > 0) {
+            const newTitle = lines[0].slice(0, 60);
+            note.title = newTitle;
+            titleEl.value = newTitle;
+          }
+
+          save();
+          renderNotes();
+        });
+
+      /* -------------------------
+   DRAG & DROP REORDER
+--------------------------*/
+      let dragIndex = null;
+
+      function addDragEvents(el) {
+        el.addEventListener('dragstart', (e) => {
+          dragIndex = Number(e.target.dataset.index);
+          e.dataTransfer.effectAllowed = 'move';
+        });
+
+        el.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          el.classList.add('drag-over');
+        });
+
+        el.addEventListener('dragleave', () => {
+          el.classList.remove('drag-over');
+        });
+
+        el.addEventListener('drop', (e) => {
+          e.preventDefault();
+          el.classList.remove('drag-over');
+          const targetItem = e.target.closest('.note-item');
+          if (!targetItem) return;
+          const targetIndex = Number(targetItem.dataset.index);
+          if (dragIndex === null || targetIndex === dragIndex) return;
+
+          const moved = notes.splice(dragIndex, 1)[0];
+          notes.splice(targetIndex, 0, moved);
+
+          if (current === dragIndex) current = targetIndex;
+          else if (dragIndex < current && targetIndex >= current) current -= 1;
+          else if (dragIndex > current && targetIndex <= current) current += 1;
+
+          save();
+          renderNotes();
+        });
+
+        el.addEventListener('dragend', () => {
+          dragIndex = null;
+          document
+            .querySelectorAll('.note-item')
+            .forEach((i) => i.classList.remove('drag-over'));
+        });
+      }
+
+      /* -------------------------
    INIT
 --------------------------*/
       if (notes.length === 0) {
-        notes.push({ title: 'Welcome', content: '' });
+        notes.push({ title: 'Welcome', content: '', manualTitle: false });
       }
       renderNotes();
-      loadNote();
+      loadNote(true);
     </script>
   </body>
 </html>
