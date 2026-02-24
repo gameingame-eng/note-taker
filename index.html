@@ -60,8 +60,10 @@
       .btn-action { background: transparent; color: var(--text-dim); border: none; font-weight: 600; text-align: left; padding: 10px 14px; border-radius: var(--radius); cursor: pointer; margin-bottom: 4px; font-size: 13px; transition: 0.2s; }
       .btn-action:hover { background: var(--hover); color: var(--text); }
 
-      .check-row { display: flex; align-items: flex-start; gap: 14px; margin: 12px 0; }
+      .check-row { display: flex; align-items: flex-start; gap: 14px; margin: 12px 0; transition: opacity 0.2s; }
       .check-row input { margin-top: 6px; width: 20px; height: 20px; accent-color: var(--accent); cursor: pointer; }
+      .check-row input:checked + div { text-decoration: line-through; opacity: 0.5; }
+      
       [contenteditable]:empty:before { content: "Start typing..."; color: var(--text-dim); opacity: 0.5; pointer-events: none; }
     </style>
   </head>
@@ -111,11 +113,24 @@
 
       let menuTargetIdx = null;
 
-      const tutorialTitle = "Welcome to Fraction";
-      const tutorialBody = `<div>Welcome to your minimalist workspace.</div>
-      <div class="check-row"><input type="checkbox"> <div><b>Try Resizing:</b> Highlight this text and spam <b>A+</b>. Notice how the highlight stays!</div></div>
-      <div class="check-row"><input type="checkbox"> <div><b>Checklists:</b> Click the button to stay organized.</div></div>
-      <div class="check-row"><input type="checkbox"> <div><b>Pinning:</b> Right-click a note in the sidebar to pin it.</div></div>`;
+      const tutorialTitle = "Quick Start Tutorial 🚀";
+      const tutorialBody = `
+        <div style="font-size: 22px; font-weight: 600; margin-bottom: 10px;">Welcome to Fraction</div>
+        <div>Fraction is built to be clean and distraction-free. Follow this list to become a pro:</div>
+        
+        <div class="check-row"><input type="checkbox"> <div><b>Formatting:</b> Highlight this text and press <b>B</b> for Bold or <i>I</i> for Italics.</div></div>
+        
+        <div class="check-row"><input type="checkbox"> <div><b>Text Size:</b> Highlight this sentence and click <b>A+</b> multiple times to make it huge. Highlight stays active!</div></div>
+        
+        <div class="check-row"><input type="checkbox"> <div><b>Dark Mode:</b> Click the 🌓 icon in the toolbar. It saves your preference automatically.</div></div>
+        
+        <div class="check-row"><input type="checkbox"> <div><b>Sidebar Magic:</b> Go to the sidebar on the left and <b>Right-Click</b> this note. You can 📌 Pin it to the top or delete it.</div></div>
+        
+        <div class="check-row"><input type="checkbox"> <div><b>Organization:</b> Use the "+ Folder" button to group your thoughts.</div></div>
+        
+        <br>
+        <div>Start typing below this line to create your first masterpiece...</div>
+      `;
 
       if (state.notes.length === 0) {
         state.notes.push({ title: tutorialTitle, content: tutorialBody, folder: 'Notes', pinned: true });
@@ -174,11 +189,9 @@
         save();
       }
 
-      // --- PERSISTENT SELECTION RESIZING ---
       function adjustFontSize(px) {
         const selection = window.getSelection();
         if (!selection.rangeCount) return;
-        
         const range = selection.getRangeAt(0);
         const container = selection.anchorNode.parentElement;
         const currentFontSize = window.getComputedStyle(container).fontSize;
@@ -187,23 +200,16 @@
         if (!selection.isCollapsed) {
           const span = document.createElement('span');
           span.style.fontSize = newFontSize;
-          
           try {
-            // Extract content, wrap it, and insert
             const fragment = range.extractContents();
             span.appendChild(fragment);
             range.insertNode(span);
-            
-            // Re-select the span so the highlight stays active
             const newRange = document.createRange();
             newRange.selectNodeContents(span);
             selection.removeAllRanges();
             selection.addRange(newRange);
-          } catch(e) {
-            document.execCommand('fontSize', false, '1');
-          }
+          } catch(e) { document.execCommand('fontSize', false, '1'); }
         } else {
-          // Cursor-only logic
           const span = document.createElement('span');
           span.style.fontSize = newFontSize;
           span.innerHTML = '&#8203;';
@@ -256,6 +262,15 @@
       document.getElementById('content').oninput = () => { updateToolbar(); save(); };
       document.getElementById('content').onmouseup = updateToolbar;
       document.getElementById('content').onkeyup = updateToolbar;
+      
+      // Save checkbox state
+      document.getElementById('content').addEventListener('change', (e) => {
+        if(e.target.type === 'checkbox') {
+            e.target.setAttribute('checked', e.target.checked);
+            save();
+        }
+      });
+
       window.onclick = () => document.getElementById('contextMenu').style.display = 'none';
 
       document.getElementById('menuPin').onclick = () => { state.notes[menuTargetIdx].pinned = !state.notes[menuTargetIdx].pinned; save(); renderSidebar(); };
