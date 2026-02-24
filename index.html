@@ -1,4 +1,4 @@
-=<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -45,12 +45,15 @@
       .note-item:hover { background: var(--hover); color: var(--text); }
       .note-item.active { background: var(--hover); font-weight: 600; color: var(--text); }
 
+      /* Command Palette & Context Menu */
       #palette-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.15); backdrop-filter: blur(12px); z-index: 3000; display: none; align-items: flex-start; justify-content: center; padding-top: 15vh; }
       #command-palette { width: 500px; background: var(--toolbar); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 20px 50px rgba(0,0,0,0.2); overflow: hidden; }
       #palette-input { width: 100%; border: none; background: transparent; padding: 18px; font-size: 16px; color: var(--text); outline: none; border-bottom: 1px solid var(--border); }
       #palette-results { max-height: 300px; overflow-y: auto; padding: 6px; }
-      .palette-item { padding: 10px 14px; border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
-      .palette-item.selected { background: var(--accent); color: white; }
+      
+      #contextMenu { position: fixed; background: var(--toolbar); border: 1px solid var(--border); border-radius: 10px; padding: 6px; z-index: 4000; display: none; box-shadow: 0 10px 25px rgba(0,0,0,0.15); min-width: 150px; }
+      .menu-item, .palette-item { padding: 10px 14px; font-size: 13px; cursor: pointer; border-radius: 8px; color: var(--text); display: flex; justify-content: space-between; align-items: center; }
+      .menu-item:hover, .palette-item.selected { background: var(--accent); color: white; }
 
       #main-container { flex: 1; display: flex; flex-direction: column; position: relative; }
       .toolbar { position: absolute; top: 32px; right: 40px; background: var(--toolbar); border: 1px solid var(--border); padding: 4px; border-radius: 12px; display: flex; gap: 2px; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
@@ -80,6 +83,11 @@
         <input id="palette-input" placeholder="Search commands..." autocomplete="off" />
         <div id="palette-results"></div>
       </div>
+    </div>
+
+    <div id="contextMenu">
+      <div class="menu-item" onclick="contextPin()"><span>Pin / Unpin</span> <span>📌</span></div>
+      <div class="menu-item" onclick="contextDelete()" style="color: #ff3b30"><span>Delete</span> <span>✕</span></div>
     </div>
 
     <div id="sidebar">
@@ -122,6 +130,7 @@
       };
 
       let savedRange = null;
+      let menuTargetIdx = null;
 
       const commands = [
         { name: 'Heading 1', cmd: 'h1', key: 'H1' },
@@ -130,15 +139,22 @@
         { name: 'Code Block', cmd: 'pre', key: 'CODE' },
         { name: 'Quote Block', cmd: 'blockquote', key: 'QUOTE' },
         { name: 'Insert Divider', cmd: 'hr', key: 'LINE' },
-        { name: 'Insert Today\'s Date', cmd: 'date', key: 'DATE' },
+        { name: 'Insert Date', cmd: 'date', key: 'DATE' },
         { name: 'Bulleted List', cmd: 'insertUnorderedList', key: 'LIST' }
       ];
 
       let selectedCmdIdx = 0;
       let filteredCmds = [...commands];
 
+      const tutorialBody = `
+        <div style="font-size: 24px; font-weight: 700; margin-bottom: 12px;">Quick Start Tutorial</div>
+        <div class="check-row"><input type="checkbox"> <div contenteditable="true"><b>Commands:</b> Type <b>/</b> anywhere to open the palette.</div></div>
+        <div class="check-row"><input type="checkbox"> <div contenteditable="true"><b>Size:</b> Highlight text and click <b>A+</b>. It stays highlighted!</div></div>
+        <div class="check-row"><input type="checkbox"> <div contenteditable="true"><b>Right-Click:</b> Right-click any note in the sidebar to 📌 Pin or ✕ Delete it.</div></div>
+      `;
+
       if (state.notes.length === 0) {
-        state.notes.push({ title: "Getting Started", content: "Type <b>/</b> to open the command palette.", folder: 'Notes', pinned: true });
+        state.notes.push({ title: "Getting Started", content: tutorialBody, folder: 'Notes', pinned: true });
       }
       if(state.darkMode) document.body.classList.add('dark-mode');
 
@@ -167,6 +183,14 @@
               item.className = `note-item ${note.originalIdx === state.currentIdx ? 'active' : ''}`;
               item.innerHTML = `<span>${note.title || 'Untitled'}</span> ${note.pinned ? '📌' : ''}`;
               item.onclick = () => { save(); state.currentIdx = note.originalIdx; loadNote(); renderSidebar(); };
+              item.oncontextmenu = (e) => {
+                e.preventDefault();
+                menuTargetIdx = note.originalIdx;
+                const menu = document.getElementById('contextMenu');
+                menu.style.display = 'block';
+                menu.style.left = e.pageX + 'px';
+                menu.style.top = e.pageY + 'px';
+              };
               group.appendChild(item);
             });
           list.appendChild(group);
@@ -237,36 +261,39 @@
 
       function runCommand(type) {
         const sel = window.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(savedRange);
+        sel.removeAllRanges(); sel.addRange(savedRange);
         paletteOverlay.style.display = 'none';
-
-        if (type === 'date') {
-          document.execCommand('insertHTML', false, new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }));
-        } else if (type === 'hr') {
-          document.execCommand('insertHorizontalRule');
-        } else if (type === 'insertUnorderedList') {
-          document.execCommand('insertUnorderedList');
-        } else {
-          document.execCommand('formatBlock', false, type);
-        }
+        if (type === 'date') document.execCommand('insertHTML', false, new Date().toLocaleDateString());
+        else if (type === 'hr') document.execCommand('insertHorizontalRule');
+        else if (type === 'insertUnorderedList') document.execCommand('insertUnorderedList');
+        else document.execCommand('formatBlock', false, type);
         save();
       }
 
-      // --- SMART ENTER LOGIC ---
-      document.getElementById('content').addEventListener('keydown', (e) => {
+      // --- CONTEXT MENU ACTIONS ---
+      function contextPin() {
+        state.notes[menuTargetIdx].pinned = !state.notes[menuTargetIdx].pinned;
+        save(); renderSidebar();
+      }
+
+      function contextDelete() {
+        if(confirm("Delete this note?")) {
+            state.notes.splice(menuTargetIdx, 1);
+            if(state.notes.length === 0) state.notes.push({ title: '', content: '', folder: 'Notes', pinned: false });
+            state.currentIdx = 0;
+            save(); loadNote(); renderSidebar();
+        }
+      }
+
+      // --- SMART ENTER & EDITING ---
+      document.getElementById('content').onkeydown = (e) => {
         if (e.key === 'Enter') {
-          const selection = window.getSelection();
-          const node = selection.anchorNode.parentElement;
-          const tag = node.tagName.toLowerCase();
-          
-          // If user presses Enter in a Header/Code/Quote and it's empty, break out to 'P'
-          if (['h1', 'h2', 'pre', 'blockquote'].includes(tag) && node.textContent.trim() === "") {
-            e.preventDefault();
-            document.execCommand('formatBlock', false, 'p');
+          const node = window.getSelection().anchorNode.parentElement;
+          if (['h1', 'h2', 'pre', 'blockquote'].includes(node.tagName.toLowerCase()) && node.textContent.trim() === "") {
+            e.preventDefault(); document.execCommand('formatBlock', false, 'p');
           }
         }
-      });
+      };
 
       function addChecklist() {
         const html = `<div class="check-row"><input type="checkbox"><div contenteditable="true" style="outline:none;flex:1">New Task...</div></div>`;
@@ -278,32 +305,23 @@
       function adjustFontSize(px) {
         const selection = window.getSelection();
         if (!selection.rangeCount || selection.isCollapsed) return;
-        
         const range = selection.getRangeAt(0);
         const container = selection.anchorNode.parentElement;
-        const currentFontSize = window.getComputedStyle(container).fontSize;
-        const newSize = (parseFloat(currentFontSize) + px) + 'px';
-        
-        // Wrap in span with !important-like inline style
+        const newSize = (parseFloat(window.getComputedStyle(container).fontSize) + px) + 'px';
         const span = document.createElement('span');
         span.style.cssText = `font-size: ${newSize} !important;`;
-        
-        const fragment = range.extractContents();
-        span.appendChild(fragment);
+        span.appendChild(range.extractContents());
         range.insertNode(span);
-        
         const newRange = document.createRange();
         newRange.selectNodeContents(span);
-        selection.removeAllRanges();
-        selection.addRange(newRange);
+        selection.removeAllRanges(); selection.addRange(newRange);
         save();
       }
 
       function createNewNote() {
         save();
         state.notes.unshift({ title: '', content: '', folder: 'Notes', pinned: false });
-        state.currentIdx = 0;
-        loadNote(); renderSidebar();
+        state.currentIdx = 0; loadNote(); renderSidebar();
       }
 
       function createNewFolder() {
@@ -322,6 +340,11 @@
 
       document.getElementById('titleInput').oninput = () => { state.notes[state.currentIdx].title = document.getElementById('titleInput').value; renderSidebar(); save(); };
       document.getElementById('content').oninput = save;
+      window.onclick = () => { 
+        document.getElementById('contextMenu').style.display = 'none';
+        if (!event.target.closest('#palette-overlay')) paletteOverlay.style.display = 'none';
+      };
+
       renderSidebar();
       loadNote();
     </script>
