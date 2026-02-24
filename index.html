@@ -45,6 +45,7 @@
       .note-item:hover { background: var(--hover); color: var(--text); }
       .note-item.active { background: var(--hover); font-weight: 600; color: var(--text); }
 
+      /* Command Palette & Context Menu */
       #palette-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.15); backdrop-filter: blur(12px); z-index: 3000; display: none; align-items: flex-start; justify-content: center; padding-top: 15vh; }
       #command-palette { width: 500px; background: var(--toolbar); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 20px 50px rgba(0,0,0,0.2); overflow: hidden; }
       #palette-input { width: 100%; border: none; background: transparent; padding: 18px; font-size: 16px; color: var(--text); outline: none; border-bottom: 1px solid var(--border); }
@@ -85,8 +86,8 @@
     </div>
 
     <div id="contextMenu">
-      <div class="menu-item" onmousedown="contextPin()"><span>Pin / Unpin</span> <span>📌</span></div>
-      <div class="menu-item" onmousedown="contextDelete()" style="color: #ff3b30"><span>Delete</span> <span>✕</span></div>
+      <div class="menu-item" onclick="contextPin()"><span>Pin / Unpin</span> <span>📌</span></div>
+      <div class="menu-item" onclick="contextDelete()" style="color: #ff3b30"><span>Delete</span> <span>✕</span></div>
     </div>
 
     <div id="sidebar">
@@ -145,8 +146,15 @@
       let selectedCmdIdx = 0;
       let filteredCmds = [...commands];
 
+      const tutorialBody = `
+        <div style="font-size: 24px; font-weight: 700; margin-bottom: 12px;">Quick Start Tutorial</div>
+        <div class="check-row"><input type="checkbox"> <div contenteditable="true"><b>Commands:</b> Type <b>/</b> anywhere to open the palette.</div></div>
+        <div class="check-row"><input type="checkbox"> <div contenteditable="true"><b>Size:</b> Highlight text and click <b>A+</b>. It stays highlighted!</div></div>
+        <div class="check-row"><input type="checkbox"> <div contenteditable="true"><b>Right-Click:</b> Right-click any note in the sidebar to 📌 Pin or ✕ Delete it.</div></div>
+      `;
+
       if (state.notes.length === 0) {
-        state.notes.push({ title: "Getting Started", content: "Right-click me in the sidebar to pin!", folder: 'Notes', pinned: true });
+        state.notes.push({ title: "Getting Started", content: tutorialBody, folder: 'Notes', pinned: true });
       }
       if(state.darkMode) document.body.classList.add('dark-mode');
 
@@ -177,7 +185,7 @@
               item.onclick = () => { save(); state.currentIdx = note.originalIdx; loadNote(); renderSidebar(); };
               item.oncontextmenu = (e) => {
                 e.preventDefault();
-                menuTargetIdx = note.originalIdx; // Set Target
+                menuTargetIdx = note.originalIdx;
                 const menu = document.getElementById('contextMenu');
                 menu.style.display = 'block';
                 menu.style.left = e.pageX + 'px';
@@ -202,7 +210,7 @@
         save();
       }
 
-      // --- PALETTE ---
+      // --- COMMAND PALETTE ---
       const paletteOverlay = document.getElementById('palette-overlay');
       const paletteInput = document.getElementById('palette-input');
       const paletteResults = document.getElementById('palette-results');
@@ -262,27 +270,22 @@
         save();
       }
 
-      // --- CONTEXT MENU (FIXED) ---
+      // --- CONTEXT MENU ACTIONS ---
       function contextPin() {
-        if (menuTargetIdx !== null) {
-          state.notes[menuTargetIdx].pinned = !state.notes[menuTargetIdx].pinned;
-          save(); renderSidebar();
-        }
-        document.getElementById('contextMenu').style.display = 'none';
+        state.notes[menuTargetIdx].pinned = !state.notes[menuTargetIdx].pinned;
+        save(); renderSidebar();
       }
 
       function contextDelete() {
-        if(menuTargetIdx !== null && confirm("Delete this note?")) {
+        if(confirm("Delete this note?")) {
             state.notes.splice(menuTargetIdx, 1);
-            if(state.notes.length === 0) {
-                state.notes.push({ title: '', content: '', folder: 'Notes', pinned: false });
-            }
+            if(state.notes.length === 0) state.notes.push({ title: '', content: '', folder: 'Notes', pinned: false });
             state.currentIdx = 0;
             save(); loadNote(); renderSidebar();
         }
-        document.getElementById('contextMenu').style.display = 'none';
       }
 
+      // --- SMART ENTER & EDITING ---
       document.getElementById('content').onkeydown = (e) => {
         if (e.key === 'Enter') {
           const node = window.getSelection().anchorNode.parentElement;
@@ -337,10 +340,10 @@
 
       document.getElementById('titleInput').oninput = () => { state.notes[state.currentIdx].title = document.getElementById('titleInput').value; renderSidebar(); save(); };
       document.getElementById('content').oninput = save;
-      
-      window.addEventListener('click', (e) => {
+      window.onclick = () => { 
         document.getElementById('contextMenu').style.display = 'none';
-      });
+        if (!event.target.closest('#palette-overlay')) paletteOverlay.style.display = 'none';
+      };
 
       renderSidebar();
       loadNote();
