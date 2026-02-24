@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+=<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -14,8 +14,7 @@
         --border: rgba(0, 0, 0, 0.05);
         --hover: rgba(0, 0, 0, 0.03);
         --toolbar: #ffffff;
-        --radius: 10px;
-        --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+        --radius: 12px;
       }
 
       body.dark-mode {
@@ -23,7 +22,7 @@
         --sidebar-bg: #121212;
         --text: #f5f5f7;
         --text-dim: #7a7a7a;
-        --border: rgba(255, 255, 255, 0.05);
+        --border: rgba(255, 255, 255, 0.08);
         --hover: rgba(255, 255, 255, 0.05);
         --toolbar: #1c1c1e;
       }
@@ -32,66 +31,77 @@
       body { margin: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif; display: flex; height: 100vh; overflow: hidden; transition: background 0.3s ease; }
 
       #sidebar { width: 260px; background: var(--sidebar-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 32px 16px; }
-      .brand { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 2.5px; padding: 12px; margin-bottom: 24px; color: var(--text); opacity: 0.8; }
+      .brand { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; padding: 12px; margin-bottom: 12px; color: var(--text-dim); }
+      
+      .sidebar-actions { display: flex; flex-direction: column; gap: 2px; margin-bottom: 24px; }
+      .btn-action { background: transparent; color: var(--text-dim); border: none; font-weight: 500; text-align: left; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; transition: 0.2s; }
+      .btn-action:hover { background: var(--hover); color: var(--text); }
+
       #notesList { flex: 1; overflow-y: auto; }
-      .folder-group { margin-bottom: 32px; }
-      .folder-header { font-size: 10px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; padding: 8px 12px; letter-spacing: 1px; }
+      .folder-group { margin-bottom: 28px; }
+      .folder-header { font-size: 10px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; padding: 8px 12px; letter-spacing: 1px; opacity: 0.5; }
 
-      .note-item { padding: 10px 14px; border-radius: var(--radius); margin: 2px 0; cursor: pointer; font-size: 14px; color: var(--text); display: flex; justify-content: space-between; align-items: center; transition: all 0.2s var(--ease); }
-      .note-item:hover { background: var(--hover); transform: translateX(2px); }
-      .note-item.active { background: var(--hover); font-weight: 600; color: var(--accent); }
+      .note-item { padding: 8px 12px; border-radius: 8px; margin: 1px 0; cursor: pointer; font-size: 14px; display: flex; justify-content: space-between; align-items: center; transition: 0.15s; color: var(--text-dim); }
+      .note-item:hover { background: var(--hover); color: var(--text); }
+      .note-item.active { background: var(--hover); font-weight: 600; color: var(--text); }
 
-      #contextMenu { position: fixed; background: var(--toolbar); border: 1px solid var(--border); border-radius: 12px; padding: 6px; z-index: 2000; display: none; box-shadow: 0 12px 30px rgba(0,0,0,0.15); min-width: 170px; backdrop-filter: blur(10px); }
-      .menu-item { padding: 10px 14px; font-size: 13px; cursor: pointer; border-radius: 8px; color: var(--text); display: flex; justify-content: space-between; }
-      .menu-item:hover { background: var(--accent); color: white; }
+      #palette-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.15); backdrop-filter: blur(12px); z-index: 3000; display: none; align-items: flex-start; justify-content: center; padding-top: 15vh; }
+      #command-palette { width: 500px; background: var(--toolbar); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 20px 50px rgba(0,0,0,0.2); overflow: hidden; }
+      #palette-input { width: 100%; border: none; background: transparent; padding: 18px; font-size: 16px; color: var(--text); outline: none; border-bottom: 1px solid var(--border); }
+      #palette-results { max-height: 300px; overflow-y: auto; padding: 6px; }
+      .palette-item { padding: 10px 14px; border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+      .palette-item.selected { background: var(--accent); color: white; }
 
       #main-container { flex: 1; display: flex; flex-direction: column; position: relative; }
-      .toolbar { position: absolute; top: 32px; right: 40px; background: var(--toolbar); border: 1px solid var(--border); padding: 6px; border-radius: 14px; display: flex; gap: 4px; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.05); align-items: center; }
+      .toolbar { position: absolute; top: 32px; right: 40px; background: var(--toolbar); border: 1px solid var(--border); padding: 4px; border-radius: 12px; display: flex; gap: 2px; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
 
       #editor-scroll { flex: 1; overflow-y: auto; scroll-behavior: smooth; }
-      #editor-content { max-width: 760px; margin: 0 auto; width: 100%; padding: 140px 60px; }
-      #titleInput { width: 100%; background: transparent; border: none; outline: none; font-size: 44px; font-weight: 800; color: var(--text); margin-bottom: 24px; letter-spacing: -1.5px; }
+      #editor-content { max-width: 720px; margin: 0 auto; width: 100%; padding: 140px 40px; }
+      #titleInput { width: 100%; background: transparent; border: none; outline: none; font-size: 42px; font-weight: 800; color: var(--text); margin-bottom: 24px; letter-spacing: -1.2px; }
       #content { outline: none; font-size: 18px; line-height: 1.7; color: var(--text); min-height: 60vh; }
 
-      .tool-btn { background: transparent; border: none; color: var(--text-dim); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; }
+      .tool-btn { background: transparent; border: none; color: var(--text-dim); padding: 6px 10px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; }
       .tool-btn:hover { background: var(--hover); color: var(--text); }
       .tool-btn.active { background: var(--accent); color: white; }
 
-      .btn-action { background: transparent; color: var(--text-dim); border: none; font-weight: 600; text-align: left; padding: 10px 14px; border-radius: var(--radius); cursor: pointer; margin-bottom: 4px; font-size: 13px; transition: 0.2s; }
-      .btn-action:hover { background: var(--hover); color: var(--text); }
-
-      .check-row { display: flex; align-items: flex-start; gap: 14px; margin: 12px 0; transition: opacity 0.2s; }
-      .check-row input { margin-top: 6px; width: 20px; height: 20px; accent-color: var(--accent); cursor: pointer; }
-      .check-row input:checked + div { text-decoration: line-through; opacity: 0.5; }
+      .check-row { display: flex; align-items: flex-start; gap: 12px; margin: 10px 0; }
+      .check-row input[type="checkbox"] { margin-top: 6px; width: 18px; height: 18px; accent-color: var(--accent); flex-shrink: 0; }
       
-      [contenteditable]:empty:before { content: "Start typing..."; color: var(--text-dim); opacity: 0.5; pointer-events: none; }
+      pre { background: var(--hover); padding: 16px; border-radius: 8px; font-family: monospace; font-size: 15px; margin: 16px 0; overflow-x: auto; white-space: pre-wrap; }
+      blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding-left: 20px; color: var(--text-dim); font-style: italic; }
+      hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+      [contenteditable]:empty:before { content: "Type '/' for commands..."; color: var(--text-dim); opacity: 0.3; pointer-events: none; }
     </style>
   </head>
   <body>
 
-    <div id="contextMenu">
-      <div class="menu-item" id="menuPin"><span>Pin</span> <span>📌</span></div>
-      <div class="menu-item" id="menuDelete" style="color: #ff3b30"><span>Delete</span> <span>✕</span></div>
+    <div id="palette-overlay">
+      <div id="command-palette">
+        <input id="palette-input" placeholder="Search commands..." autocomplete="off" />
+        <div id="palette-results"></div>
+      </div>
     </div>
 
     <div id="sidebar">
       <div class="brand">Fraction</div>
-      <button class="btn-action" onclick="createNewNote()">+ New Note</button>
-      <button class="btn-action" onclick="createNewFolder()" style="margin-bottom: 24px;">+ Folder</button>
+      <div class="sidebar-actions">
+        <button class="btn-action" onclick="createNewNote()">New Note</button>
+        <button class="btn-action" onclick="createNewFolder()">New Folder</button>
+      </div>
       <div id="notesList"></div>
     </div>
 
     <div id="main-container">
       <div class="toolbar">
         <button class="tool-btn" onclick="toggleTheme()">🌓</button>
-        <div style="width:1px; background: var(--border); height: 20px;"></div>
+        <div style="width:1px; background: var(--border); height: 16px; margin: 6px 4px;"></div>
         <button class="tool-btn" id="btn-bold" onclick="format('bold')">B</button>
         <button class="tool-btn" id="btn-italic" onclick="format('italic')">I</button>
         <button class="tool-btn" onclick="addChecklist()">Checklist</button>
-        <div style="width:1px; background: var(--border); height: 20px;"></div>
+        <div style="width:1px; background: var(--border); height: 16px; margin: 6px 4px;"></div>
         <button class="tool-btn" onclick="adjustFontSize(-2)">A-</button>
         <button class="tool-btn" onclick="adjustFontSize(2)">A+</button>
-        <div style="width:1px; background: var(--border); height: 20px;"></div>
+        <div style="width:1px; background: var(--border); height: 16px; margin: 6px 4px;"></div>
         <button class="tool-btn" onclick="exportNote()">Export</button>
       </div>
 
@@ -111,31 +121,25 @@
         darkMode: localStorage.getItem('fraction_theme') === 'dark'
       };
 
-      let menuTargetIdx = null;
+      let savedRange = null;
 
-      const tutorialTitle = "Quick Start Tutorial 🚀";
-      const tutorialBody = `
-        <div style="font-size: 22px; font-weight: 600; margin-bottom: 10px;">Welcome to Fraction</div>
-        <div>Fraction is built to be clean and distraction-free. Follow this list to become a pro:</div>
-        
-        <div class="check-row"><input type="checkbox"> <div><b>Formatting:</b> Highlight this text and press <b>B</b> for Bold or <i>I</i> for Italics.</div></div>
-        
-        <div class="check-row"><input type="checkbox"> <div><b>Text Size:</b> Highlight this sentence and click <b>A+</b> multiple times to make it huge. Highlight stays active!</div></div>
-        
-        <div class="check-row"><input type="checkbox"> <div><b>Dark Mode:</b> Click the 🌓 icon in the toolbar. It saves your preference automatically.</div></div>
-        
-        <div class="check-row"><input type="checkbox"> <div><b>Sidebar Magic:</b> Go to the sidebar on the left and <b>Right-Click</b> this note. You can 📌 Pin it to the top or delete it.</div></div>
-        
-        <div class="check-row"><input type="checkbox"> <div><b>Organization:</b> Use the "+ Folder" button to group your thoughts.</div></div>
-        
-        <br>
-        <div>Start typing below this line to create your first masterpiece...</div>
-      `;
+      const commands = [
+        { name: 'Heading 1', cmd: 'h1', key: 'H1' },
+        { name: 'Heading 2', cmd: 'h2', key: 'H2' },
+        { name: 'Normal Text', cmd: 'p', key: 'TEXT' },
+        { name: 'Code Block', cmd: 'pre', key: 'CODE' },
+        { name: 'Quote Block', cmd: 'blockquote', key: 'QUOTE' },
+        { name: 'Insert Divider', cmd: 'hr', key: 'LINE' },
+        { name: 'Insert Today\'s Date', cmd: 'date', key: 'DATE' },
+        { name: 'Bulleted List', cmd: 'insertUnorderedList', key: 'LIST' }
+      ];
+
+      let selectedCmdIdx = 0;
+      let filteredCmds = [...commands];
 
       if (state.notes.length === 0) {
-        state.notes.push({ title: tutorialTitle, content: tutorialBody, folder: 'Notes', pinned: true });
+        state.notes.push({ title: "Getting Started", content: "Type <b>/</b> to open the command palette.", folder: 'Notes', pinned: true });
       }
-
       if(state.darkMode) document.body.classList.add('dark-mode');
 
       function save() {
@@ -156,15 +160,15 @@
           const group = document.createElement('div');
           group.className = 'folder-group';
           group.innerHTML = `<div class="folder-header">${folderName}</div>`;
-          const folderNotes = state.notes.map((n, i) => ({...n, originalIdx: i})).filter(n => n.folder === folderName).sort((a, b) => (b.pinned - a.pinned));
-          folderNotes.forEach(note => {
-            const item = document.createElement('div');
-            item.className = `note-item ${note.originalIdx === state.currentIdx ? 'active' : ''}`;
-            item.innerHTML = `<span>${note.title || 'Untitled'}</span> ${note.pinned ? '📌' : ''}`;
-            item.onclick = () => { save(); state.currentIdx = note.originalIdx; loadNote(); renderSidebar(); };
-            item.oncontextmenu = (e) => { e.preventDefault(); menuTargetIdx = note.originalIdx; const menu = document.getElementById('contextMenu'); menu.style.display = 'block'; menu.style.left = e.pageX + 'px'; menu.style.top = e.pageY + 'px'; };
-            group.appendChild(item);
-          });
+          state.notes.map((n, i) => ({...n, originalIdx: i}))
+            .filter(n => n.folder === folderName).sort((a,b) => b.pinned - a.pinned)
+            .forEach(note => {
+              const item = document.createElement('div');
+              item.className = `note-item ${note.originalIdx === state.currentIdx ? 'active' : ''}`;
+              item.innerHTML = `<span>${note.title || 'Untitled'}</span> ${note.pinned ? '📌' : ''}`;
+              item.onclick = () => { save(); state.currentIdx = note.originalIdx; loadNote(); renderSidebar(); };
+              group.appendChild(item);
+            });
           list.appendChild(group);
         });
       }
@@ -174,7 +178,6 @@
         if(!note) return;
         document.getElementById('titleInput').value = note.title || '';
         document.getElementById('content').innerHTML = note.content || '';
-        updateToolbar();
       }
 
       function toggleTheme() {
@@ -183,58 +186,117 @@
         save();
       }
 
-      function format(cmd) {
-        document.execCommand(cmd, false, null);
-        updateToolbar();
-        save();
+      // --- COMMAND PALETTE ---
+      const paletteOverlay = document.getElementById('palette-overlay');
+      const paletteInput = document.getElementById('palette-input');
+      const paletteResults = document.getElementById('palette-results');
+
+      document.getElementById('content').addEventListener('beforeinput', (e) => {
+        if (e.data === '/') {
+          e.preventDefault();
+          const sel = window.getSelection();
+          if (sel.rangeCount) savedRange = sel.getRangeAt(0);
+          openPalette();
+        }
+      });
+
+      function openPalette() {
+        paletteOverlay.style.display = 'flex';
+        paletteInput.value = '';
+        paletteInput.focus();
+        filterPalette();
       }
 
-      function adjustFontSize(px) {
-        const selection = window.getSelection();
-        if (!selection.rangeCount) return;
-        const range = selection.getRangeAt(0);
-        const container = selection.anchorNode.parentElement;
-        const currentFontSize = window.getComputedStyle(container).fontSize;
-        const newFontSize = (parseFloat(currentFontSize) + px) + 'px';
+      function closePalette() {
+        paletteOverlay.style.display = 'none';
+        document.getElementById('content').focus();
+      }
 
-        if (!selection.isCollapsed) {
-          const span = document.createElement('span');
-          span.style.fontSize = newFontSize;
-          try {
-            const fragment = range.extractContents();
-            span.appendChild(fragment);
-            range.insertNode(span);
-            const newRange = document.createRange();
-            newRange.selectNodeContents(span);
-            selection.removeAllRanges();
-            selection.addRange(newRange);
-          } catch(e) { document.execCommand('fontSize', false, '1'); }
+      paletteInput.oninput = filterPalette;
+      paletteInput.onkeydown = (e) => {
+        if (e.key === 'ArrowDown') { e.preventDefault(); selectedCmdIdx = (selectedCmdIdx + 1) % filteredCmds.length; renderPalette(); }
+        if (e.key === 'ArrowUp') { e.preventDefault(); selectedCmdIdx = (selectedCmdIdx - 1 + filteredCmds.length) % filteredCmds.length; renderPalette(); }
+        if (e.key === 'Enter') { e.preventDefault(); runCommand(filteredCmds[selectedCmdIdx].cmd); }
+        if (e.key === 'Escape') closePalette();
+      };
+
+      function filterPalette() {
+        const val = paletteInput.value.toLowerCase();
+        filteredCmds = commands.filter(c => c.name.toLowerCase().includes(val) || c.key.toLowerCase().includes(val));
+        selectedCmdIdx = 0;
+        renderPalette();
+      }
+
+      function renderPalette() {
+        paletteResults.innerHTML = filteredCmds.map((c, i) => `
+          <div class="palette-item ${i === selectedCmdIdx ? 'selected' : ''}" onmousedown="runCommand('${c.cmd}')">
+            <span>${c.name}</span> <b>${c.key}</b>
+          </div>
+        `).join('');
+      }
+
+      function runCommand(type) {
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(savedRange);
+        paletteOverlay.style.display = 'none';
+
+        if (type === 'date') {
+          document.execCommand('insertHTML', false, new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }));
+        } else if (type === 'hr') {
+          document.execCommand('insertHorizontalRule');
+        } else if (type === 'insertUnorderedList') {
+          document.execCommand('insertUnorderedList');
         } else {
-          const span = document.createElement('span');
-          span.style.fontSize = newFontSize;
-          span.innerHTML = '&#8203;';
-          range.insertNode(span);
-          const newRange = document.createRange();
-          newRange.setStart(span, 1);
-          newRange.collapse(true);
-          selection.removeAllRanges();
-          selection.addRange(newRange);
+          document.execCommand('formatBlock', false, type);
         }
         save();
       }
 
-      function updateToolbar() {
-        const b = document.getElementById('btn-bold');
-        const i = document.getElementById('btn-italic');
-        if(!b || !i) return;
-        document.queryCommandState('bold') ? b.classList.add('active') : b.classList.remove('active');
-        document.queryCommandState('italic') ? i.classList.add('active') : i.classList.remove('active');
-      }
+      // --- SMART ENTER LOGIC ---
+      document.getElementById('content').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          const selection = window.getSelection();
+          const node = selection.anchorNode.parentElement;
+          const tag = node.tagName.toLowerCase();
+          
+          // If user presses Enter in a Header/Code/Quote and it's empty, break out to 'P'
+          if (['h1', 'h2', 'pre', 'blockquote'].includes(tag) && node.textContent.trim() === "") {
+            e.preventDefault();
+            document.execCommand('formatBlock', false, 'p');
+          }
+        }
+      });
 
       function addChecklist() {
-        const html = `<div class="check-row"><input type="checkbox"><div contenteditable="true" style="outline:none;flex:1"></div></div>`;
-        document.getElementById('content').focus();
+        const html = `<div class="check-row"><input type="checkbox"><div contenteditable="true" style="outline:none;flex:1">New Task...</div></div>`;
         document.execCommand('insertHTML', false, html);
+      }
+
+      function format(cmd) { document.execCommand(cmd, false, null); save(); }
+
+      function adjustFontSize(px) {
+        const selection = window.getSelection();
+        if (!selection.rangeCount || selection.isCollapsed) return;
+        
+        const range = selection.getRangeAt(0);
+        const container = selection.anchorNode.parentElement;
+        const currentFontSize = window.getComputedStyle(container).fontSize;
+        const newSize = (parseFloat(currentFontSize) + px) + 'px';
+        
+        // Wrap in span with !important-like inline style
+        const span = document.createElement('span');
+        span.style.cssText = `font-size: ${newSize} !important;`;
+        
+        const fragment = range.extractContents();
+        span.appendChild(fragment);
+        range.insertNode(span);
+        
+        const newRange = document.createRange();
+        newRange.selectNodeContents(span);
+        selection.removeAllRanges();
+        selection.addRange(newRange);
+        save();
       }
 
       function createNewNote() {
@@ -259,31 +321,7 @@
       }
 
       document.getElementById('titleInput').oninput = () => { state.notes[state.currentIdx].title = document.getElementById('titleInput').value; renderSidebar(); save(); };
-      document.getElementById('content').oninput = () => { updateToolbar(); save(); };
-      document.getElementById('content').onmouseup = updateToolbar;
-      document.getElementById('content').onkeyup = updateToolbar;
-      
-      // Save checkbox state
-      document.getElementById('content').addEventListener('change', (e) => {
-        if(e.target.type === 'checkbox') {
-            e.target.setAttribute('checked', e.target.checked);
-            save();
-        }
-      });
-
-      window.onclick = () => document.getElementById('contextMenu').style.display = 'none';
-
-      document.getElementById('menuPin').onclick = () => { state.notes[menuTargetIdx].pinned = !state.notes[menuTargetIdx].pinned; save(); renderSidebar(); };
-      document.getElementById('menuDelete').onclick = (e) => {
-        e.stopPropagation();
-        if(confirm("Delete this note?")) {
-            state.notes.splice(menuTargetIdx, 1);
-            if(state.notes.length === 0) state.notes.push({ title: '', content: '', folder: 'Notes', pinned: false });
-            state.currentIdx = 0;
-            save(); loadNote(); renderSidebar();
-        }
-      };
-
+      document.getElementById('content').oninput = save;
       renderSidebar();
       loadNote();
     </script>
