@@ -18,93 +18,50 @@
         --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
       }
 
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --bg: #0a0a0a;
-          --sidebar-bg: #121212;
-          --text: #f5f5f7;
-          --text-dim: #7a7a7a;
-          --border: rgba(255, 255, 255, 0.05);
-          --hover: rgba(255, 255, 255, 0.05);
-          --toolbar: #1c1c1e;
-        }
+      body.dark-mode {
+        --bg: #0a0a0a;
+        --sidebar-bg: #121212;
+        --text: #f5f5f7;
+        --text-dim: #7a7a7a;
+        --border: rgba(255, 255, 255, 0.05);
+        --hover: rgba(255, 255, 255, 0.05);
+        --toolbar: #1c1c1e;
       }
 
       * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
-      body { margin: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif; display: flex; height: 100vh; overflow: hidden; }
+      body { margin: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif; display: flex; height: 100vh; overflow: hidden; transition: background 0.3s ease; }
 
-      /* --- SIDEBAR --- */
-      #sidebar {
-        width: 260px;
-        background: var(--sidebar-bg);
-        border-right: 1px solid var(--border);
-        display: flex;
-        flex-direction: column;
-        padding: 32px 16px;
-      }
-
+      #sidebar { width: 260px; background: var(--sidebar-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 32px 16px; }
       .brand { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 2.5px; padding: 12px; margin-bottom: 24px; color: var(--text); opacity: 0.8; }
-
       #notesList { flex: 1; overflow-y: auto; }
       .folder-group { margin-bottom: 32px; }
       .folder-header { font-size: 10px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; padding: 8px 12px; letter-spacing: 1px; }
 
-      .note-item {
-        padding: 10px 14px;
-        border-radius: var(--radius);
-        margin: 2px 0;
-        cursor: pointer;
-        font-size: 14px;
-        color: var(--text);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        transition: all 0.2s var(--ease);
-      }
+      .note-item { padding: 10px 14px; border-radius: var(--radius); margin: 2px 0; cursor: pointer; font-size: 14px; color: var(--text); display: flex; justify-content: space-between; align-items: center; transition: all 0.2s var(--ease); }
       .note-item:hover { background: var(--hover); transform: translateX(2px); }
       .note-item.active { background: var(--hover); font-weight: 600; color: var(--accent); }
 
-      /* --- CONTEXT MENU --- */
-      #contextMenu {
-        position: fixed; background: var(--toolbar); border: 1px solid var(--border);
-        border-radius: 12px; padding: 6px; z-index: 2000; display: none; box-shadow: 0 12px 30px rgba(0,0,0,0.15); min-width: 170px; backdrop-filter: blur(10px);
-      }
+      #contextMenu { position: fixed; background: var(--toolbar); border: 1px solid var(--border); border-radius: 12px; padding: 6px; z-index: 2000; display: none; box-shadow: 0 12px 30px rgba(0,0,0,0.15); min-width: 170px; backdrop-filter: blur(10px); }
       .menu-item { padding: 10px 14px; font-size: 13px; cursor: pointer; border-radius: 8px; color: var(--text); display: flex; justify-content: space-between; }
       .menu-item:hover { background: var(--accent); color: white; }
 
-      /* --- EDITOR --- */
       #main-container { flex: 1; display: flex; flex-direction: column; position: relative; }
-      
-      .toolbar {
-        position: absolute; top: 32px; right: 40px;
-        background: var(--toolbar); border: 1px solid var(--border);
-        padding: 6px; border-radius: 14px; display: flex; gap: 4px; z-index: 100;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      }
+      .toolbar { position: absolute; top: 32px; right: 40px; background: var(--toolbar); border: 1px solid var(--border); padding: 6px; border-radius: 14px; display: flex; gap: 4px; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.05); align-items: center; }
 
       #editor-scroll { flex: 1; overflow-y: auto; scroll-behavior: smooth; }
       #editor-content { max-width: 760px; margin: 0 auto; width: 100%; padding: 140px 60px; }
-      
-      #titleInput {
-        width: 100%; background: transparent; border: none; outline: none;
-        font-size: 44px; font-weight: 800; color: var(--text); margin-bottom: 24px; letter-spacing: -1.5px;
-      }
+      #titleInput { width: 100%; background: transparent; border: none; outline: none; font-size: 44px; font-weight: 800; color: var(--text); margin-bottom: 24px; letter-spacing: -1.5px; }
       #content { outline: none; font-size: 18px; line-height: 1.7; color: var(--text); min-height: 60vh; }
 
-      .tool-btn { 
-        background: transparent; border: none; color: var(--text-dim); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;
-      }
+      .tool-btn { background: transparent; border: none; color: var(--text-dim); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; }
       .tool-btn:hover { background: var(--hover); color: var(--text); }
-      
-      .btn-action { 
-        background: transparent; color: var(--text-dim); border: none; font-weight: 600; text-align: left; 
-        padding: 10px 14px; border-radius: var(--radius); cursor: pointer; margin-bottom: 4px; font-size: 13px; transition: 0.2s;
-      }
+      .tool-btn.active { background: var(--accent); color: white; }
+
+      .btn-action { background: transparent; color: var(--text-dim); border: none; font-weight: 600; text-align: left; padding: 10px 14px; border-radius: var(--radius); cursor: pointer; margin-bottom: 4px; font-size: 13px; transition: 0.2s; }
       .btn-action:hover { background: var(--hover); color: var(--text); }
 
       .check-row { display: flex; align-items: flex-start; gap: 14px; margin: 12px 0; }
       .check-row input { margin-top: 6px; width: 20px; height: 20px; accent-color: var(--accent); cursor: pointer; }
-      
       [contenteditable]:empty:before { content: "Start typing..."; color: var(--text-dim); opacity: 0.5; pointer-events: none; }
     </style>
   </head>
@@ -124,12 +81,15 @@
 
     <div id="main-container">
       <div class="toolbar">
-        <button class="tool-btn" onclick="format('bold')">B</button>
-        <button class="tool-btn" onclick="format('italic')">I</button>
+        <button class="tool-btn" onclick="toggleTheme()">🌓</button>
+        <div style="width:1px; background: var(--border); height: 20px;"></div>
+        <button class="tool-btn" id="btn-bold" onclick="format('bold')">B</button>
+        <button class="tool-btn" id="btn-italic" onclick="format('italic')">I</button>
         <button class="tool-btn" onclick="addChecklist()">Checklist</button>
-        <button class="tool-btn" onclick="smartResize(1.1)">A+</button>
-        <button class="tool-btn" onclick="smartResize(0.9)">A-</button>
-        <div style="width:1px; background: var(--border); margin: 6px 4px;"></div>
+        <div style="width:1px; background: var(--border); height: 20px;"></div>
+        <button class="tool-btn" onclick="adjustFontSize(-2)">A-</button>
+        <button class="tool-btn" onclick="adjustFontSize(2)">A+</button>
+        <div style="width:1px; background: var(--border); height: 20px;"></div>
         <button class="tool-btn" onclick="exportNote()">Export</button>
       </div>
 
@@ -145,7 +105,8 @@
       let state = {
         notes: JSON.parse(localStorage.getItem('fraction_v14') || '[]'),
         folders: JSON.parse(localStorage.getItem('fraction_folders_v14') || '["Notes"]'),
-        currentIdx: 0
+        currentIdx: 0,
+        darkMode: localStorage.getItem('fraction_theme') === 'dark'
       };
 
       let menuTargetIdx = null;
@@ -153,6 +114,7 @@
       if (state.notes.length === 0) {
         state.notes.push({ title: 'Welcome', content: 'Wipe away the noise.', folder: 'Notes', pinned: false });
       }
+      if(state.darkMode) document.body.classList.add('dark-mode');
 
       function save() {
         const note = state.notes[state.currentIdx];
@@ -162,6 +124,7 @@
         }
         localStorage.setItem('fraction_v14', JSON.stringify(state.notes));
         localStorage.setItem('fraction_folders_v14', JSON.stringify(state.folders));
+        localStorage.setItem('fraction_theme', state.darkMode ? 'dark' : 'light');
       }
 
       function renderSidebar() {
@@ -171,149 +134,128 @@
           const group = document.createElement('div');
           group.className = 'folder-group';
           group.innerHTML = `<div class="folder-header">${folderName}</div>`;
-          const contentDiv = document.createElement('div');
-          
-          const folderNotes = state.notes.map((n, i) => ({...n, originalIdx: i}))
-            .filter(n => n.folder === folderName).sort((a, b) => (b.pinned - a.pinned));
-
+          const folderNotes = state.notes.map((n, i) => ({...n, originalIdx: i})).filter(n => n.folder === folderName).sort((a, b) => (b.pinned - a.pinned));
           folderNotes.forEach(note => {
             const item = document.createElement('div');
             item.className = `note-item ${note.originalIdx === state.currentIdx ? 'active' : ''}`;
             item.innerHTML = `<span>${note.title || 'Untitled'}</span> ${note.pinned ? '📌' : ''}`;
-            
-            item.onclick = () => { 
-                save(); // Save current before switching
-                state.currentIdx = note.originalIdx; 
-                loadNote(); 
-                renderSidebar(); 
-            };
-            item.oncontextmenu = (e) => {
-              e.preventDefault(); 
-              menuTargetIdx = note.originalIdx;
-              const menu = document.getElementById('contextMenu');
-              menu.style.display = 'block'; menu.style.left = e.pageX + 'px'; menu.style.top = e.pageY + 'px';
-            };
-            contentDiv.appendChild(item);
+            item.onclick = () => { save(); state.currentIdx = note.originalIdx; loadNote(); renderSidebar(); };
+            item.oncontextmenu = (e) => { e.preventDefault(); menuTargetIdx = note.originalIdx; const menu = document.getElementById('contextMenu'); menu.style.display = 'block'; menu.style.left = e.pageX + 'px'; menu.style.top = e.pageY + 'px'; };
+            group.appendChild(item);
           });
-          group.appendChild(contentDiv);
           list.appendChild(group);
         });
       }
 
       function loadNote() {
         const note = state.notes[state.currentIdx];
-        const titleEl = document.getElementById('titleInput');
-        const contentEl = document.getElementById('content');
-        
         if(!note) return;
-        titleEl.value = note.title;
-        contentEl.innerHTML = note.content;
+        document.getElementById('titleInput').value = note.title || '';
+        document.getElementById('content').innerHTML = note.content || '';
+        updateToolbar();
       }
 
-      /* --- THE FIX: WIPE BEFORE CREATE --- */
-      function createNewNote() {
-        // 1. Force the UI to reflect empty state immediately
-        document.getElementById('titleInput').value = '';
-        document.getElementById('content').innerHTML = '';
-
-        // 2. Prep metadata
-        let folder = 'Notes';
-        if (state.folders.length > 1) {
-          const choice = prompt(`Folder? (${state.folders.join(', ')})`, 'Notes');
-          if (choice && state.folders.includes(choice)) folder = choice;
-        }
-
-        // 3. Update State
-        state.notes.unshift({ title: '', content: '', folder: folder, pinned: false });
-        state.currentIdx = 0;
-
-        // 4. Save and Full Re-load
-        save(); 
-        renderSidebar(); 
-        loadNote();
-        document.getElementById('titleInput').focus();
+      function toggleTheme() {
+        state.darkMode = !state.darkMode;
+        document.body.classList.toggle('dark-mode');
+        save();
       }
 
-      function createNewFolder() {
-        const name = prompt("Folder Name:");
-        if(name && !state.folders.includes(name)) {
-          state.folders.push(name);
-          save(); renderSidebar();
-        }
+      function format(cmd) {
+        document.execCommand(cmd, false, null);
+        updateToolbar();
+        save();
       }
 
-      function exportNote() {
-        const note = state.notes[state.currentIdx];
-        const blob = new Blob([`${note.title}\n\n${note.content.replace(/<[^>]+>/g, '\n')}`], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${note.title || 'Untitled'}.txt`;
-        a.click();
-      }
-
-      function smartResize(multiplier) {
+      // --- NEW DOCS STYLE RESIZING ---
+      function adjustFontSize(px) {
         const selection = window.getSelection();
         if (!selection.rangeCount) return;
+
         const range = selection.getRangeAt(0);
+        const container = selection.anchorNode.parentElement;
+        const currentFontSize = window.getComputedStyle(container).fontSize;
+        const newFontSize = (parseFloat(currentFontSize) + px) + 'px';
+
+        // Apply style specifically to selection
+        const span = document.createElement('span');
+        span.style.fontSize = newFontSize;
 
         if (!selection.isCollapsed) {
-          const span = document.createElement('span');
-          const parent = selection.anchorNode.parentElement;
-          const currentSize = window.getComputedStyle(parent).fontSize;
-          span.style.fontSize = (parseFloat(currentSize) * multiplier) + 'px';
-          span.appendChild(range.extractContents());
+          // If text is highlighted
+          try {
+            span.appendChild(range.extractContents());
+            range.insertNode(span);
+          } catch(e) {
+            // Fallback for messy HTML
+            document.execCommand('fontSize', false, '1');
+          }
+        } else {
+          // If just cursor (no highlight), insert an empty span and put cursor inside
+          span.innerHTML = '&#8203;'; // Zero-width space to hold the cursor
           range.insertNode(span);
           
-          const newRange = document.createRange();
-          newRange.selectNodeContents(span);
-          selection.removeAllRanges();
-          selection.addRange(newRange);
-        } else {
-          const parent = selection.anchorNode.parentElement;
-          const currentSize = window.getComputedStyle(parent).fontSize;
-          const span = document.createElement('span');
-          span.style.fontSize = (parseFloat(currentSize) * multiplier) + 'px';
-          span.innerHTML = '&#8203;';
-          range.insertNode(span);
           const newRange = document.createRange();
           newRange.setStart(span, 1);
           newRange.collapse(true);
           selection.removeAllRanges();
           selection.addRange(newRange);
         }
+        
         save();
       }
 
-      document.getElementById('menuPin').onclick = () => {
-        state.notes[menuTargetIdx].pinned = !state.notes[menuTargetIdx].pinned;
-        save(); renderSidebar(); document.getElementById('contextMenu').style.display = 'none';
-      };
+      function updateToolbar() {
+        const b = document.getElementById('btn-bold');
+        const i = document.getElementById('btn-italic');
+        if(!b || !i) return;
+        document.queryCommandState('bold') ? b.classList.add('active') : b.classList.remove('active');
+        document.queryCommandState('italic') ? i.classList.add('active') : i.classList.remove('active');
+      }
 
-      document.getElementById('menuDelete').onclick = () => {
-        state.notes.splice(menuTargetIdx, 1);
-        if(state.notes.length === 0) {
-          state.notes.push({ title: 'New Note', content: '', folder: 'Notes', pinned: false });
-        }
-        state.currentIdx = 0; 
-        save(); renderSidebar(); loadNote();
-        document.getElementById('contextMenu').style.display = 'none';
-      };
+      function addChecklist() {
+        const html = `<div class="check-row"><input type="checkbox"><div contenteditable="true" style="outline:none;flex:1"></div></div>`;
+        document.getElementById('content').focus();
+        document.execCommand('insertHTML', false, html);
+      }
 
+      function createNewNote() {
+        save();
+        state.notes.unshift({ title: '', content: '', folder: 'Notes', pinned: false });
+        state.currentIdx = 0;
+        loadNote(); renderSidebar();
+      }
+
+      function createNewFolder() {
+        const name = prompt("Folder name:");
+        if(name) { state.folders.push(name); save(); renderSidebar(); }
+      }
+
+      function exportNote() {
+        const note = state.notes[state.currentIdx];
+        const blob = new Blob([note.content], {type: 'text/html'});
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = (note.title || 'Untitled') + '.html';
+        link.click();
+      }
+
+      document.getElementById('titleInput').oninput = () => { state.notes[state.currentIdx].title = document.getElementById('titleInput').value; renderSidebar(); save(); };
+      document.getElementById('content').oninput = () => { updateToolbar(); save(); };
+      document.getElementById('content').onmouseup = updateToolbar;
+      document.getElementById('content').onkeyup = updateToolbar;
       window.onclick = () => document.getElementById('contextMenu').style.display = 'none';
-      function format(cmd) { document.execCommand(cmd, false, null); save(); }
-      
-      function addChecklist() { 
-        document.execCommand('insertHTML', false, `<div class="check-row" contenteditable="false"><input type="checkbox"><div contenteditable="true" style="outline:none; flex:1">Checklist...</div></div>`); 
-        save(); 
-      }
 
-      document.getElementById('titleInput').oninput = (e) => {
-        save();
-        const active = document.querySelector('.note-item.active span');
-        if(active) active.innerText = e.target.value || 'Untitled';
+      document.getElementById('menuPin').onclick = () => { state.notes[menuTargetIdx].pinned = !state.notes[menuTargetIdx].pinned; save(); renderSidebar(); };
+      document.getElementById('menuDelete').onclick = (e) => {
+        e.stopPropagation();
+        if(confirm("Delete this note?")) {
+            state.notes.splice(menuTargetIdx, 1);
+            if(state.notes.length === 0) state.notes.push({ title: '', content: '', folder: 'Notes', pinned: false });
+            state.currentIdx = 0;
+            save(); loadNote(); renderSidebar();
+        }
       };
-      document.getElementById('content').oninput = () => save();
 
       renderSidebar();
       loadNote();
